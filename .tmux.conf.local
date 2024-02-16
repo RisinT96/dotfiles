@@ -367,8 +367,8 @@ set -g mouse on
 
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
-set -g status-keys vi
-set -g mode-keys vi
+#set -g status-keys vi
+#set -g mode-keys vi
 
 # use C-space as prefix
 set -gu prefix2

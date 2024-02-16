@@ -31,6 +31,8 @@ setup_fish() {
     sudo apt-get install -y \
         fish
 
+    ln -s -f $SCRIPTPATH/config.fish $HOME/.config/fish/config.fish
+
     fish -c \
         "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish \
             | source \
@@ -81,7 +83,9 @@ setup_docker() {
 
     # Add Docker's official GPG key:
     sudo apt-get update
-    sudo apt-get install -y ca-certificates curl
+    sudo apt-get install -y \
+        ca-certificates curl \
+        curl
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -99,9 +103,58 @@ setup_docker() {
         docker-ce-cli \
         docker-compose-plugin
 
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
-    newgrp docker
+    sudo groupadd docker || true
+    sudo usermod -aG docker $USER || true
+    newgrp docker || true
+}
+
+setup_rust() {
+    sudo apt-get update
+    sudo apt-get install -y \
+        build-essential \
+        curl \
+        make
+
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
+    source "$HOME/.cargo/env"
+
+    if [ -v "__setup_fish" ]; then
+        fish -c "fish_add_path $HOME/.cargo/bin"
+    fi
+}
+
+setup_fzf() {
+    git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
+    $HOME/.fzf/install --no-fish
+
+    if [ -v "__setup_fish" ]; then
+        fish -c "yes | fisher install PatrickF1/fzf.fish"
+    fi
+
+    if [ -v "__setup_rust" ]; then
+        cargo install --locked \
+            fd-find \
+            bat
+    fi
+}
+
+setup_nvim() {
+    sudo apt-get update
+    sudo apt-get install -y \
+        python3-dev \
+        python3-pip \
+        snapd
+
+    sudo snap install nvim --classic
+
+    echo 'if [ -f /snap/bin/nvim ]; then
+    export EDITOR="/snap/bin/nvim"
+fi' >>$HOME/.bashrc
+
+    if [ -v "__setup_fish" ]; then
+        fish -c "set -Ux EDITOR /snap/bin/nvim"
+    fi
 }
 
 set -e
@@ -119,6 +172,21 @@ fi
 if prompt "Setup docker?"; then
     echo "Will setup docker"
     __setup_docker=true
+fi
+
+if prompt "Setup rust?"; then
+    echo "Will setup rust"
+    __setup_rust=true
+fi
+
+if prompt "Setup fzf?"; then
+    echo "Will setup fzf"
+    __setup_fzf=true
+fi
+
+if prompt "Setup neo-vim?"; then
+    echo "Will setup neo-vim"
+    __setup_nvim=true
 fi
 
 echo "Starting setup, get a cup of coffee"
@@ -142,4 +210,25 @@ if [ -v "__setup_docker" ]; then
     setup_docker
 else
     echo "${RED}Skipping ${SMUL}docker${NORMAL}"
+fi
+
+if [ -v "__setup_rust" ]; then
+    echo "${BLUE}Setting up ${SMUL}rust${NORMAL}"
+    setup_rust
+else
+    echo "${RED}Skipping ${SMUL}rust${NORMAL}"
+fi
+
+if [ -v "__setup_fzf" ]; then
+    echo "${BLUE}Setting up ${SMUL}fzf${NORMAL}"
+    setup_fzf
+else
+    echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
+fi
+
+if [ -v "__setup_nvim" ]; then
+    echo "${BLUE}Setting up ${SMUL}nvim${NORMAL}"
+    setup_nvim
+else
+    echo "${RED}Skipping ${SMUL}nvim${NORMAL}"
 fi
