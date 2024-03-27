@@ -14,4 +14,6 @@ if status is-interactive
             command fzf $argv
         end
     end
+
+    zoxide init --cmd cd fish | source
 end
