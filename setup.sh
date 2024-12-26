@@ -31,6 +31,7 @@ setup_fish() {
     sudo apt-get install -y \
         fish
 
+    mkdir -p $HOME/.config/fish/
     ln -s -f $SCRIPTPATH/config.fish $HOME/.config/fish/config.fish
 
     fish -c \
@@ -126,34 +127,28 @@ setup_rust() {
 
 setup_fzf() {
     git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
-    $HOME/.fzf/install --no-fish
+    $HOME/.fzf/install --no-fish --bin
 
     if [ -v "__setup_fish" ]; then
+        fish -c "fish_add_path $HOME/.fzf/bin"
         fish -c "yes | fisher install PatrickF1/fzf.fish"
     fi
 
     if [ -v "__setup_rust" ]; then
         cargo install --locked \
+            bat \
             fd-find \
-            bat
+            ripgrep
     fi
 }
 
-setup_nvim() {
-    sudo apt-get update
-    sudo apt-get install -y \
-        python3-dev \
-        python3-pip \
-        snapd
+setup_zoxide() {
+    cargo install zoxide --locked
 
-    sudo snap install nvim --classic
-
-    echo 'if [ -f /snap/bin/nvim ]; then
-    export EDITOR="/snap/bin/nvim"
-fi' >>$HOME/.bashrc
+    echo 'eval "$(zoxide init bash)"' >> ~/.bashrc
 
     if [ -v "__setup_fish" ]; then
-        fish -c "set -Ux EDITOR /snap/bin/nvim"
+        echo 'zoxide init fish | source' > ~/.config/fish/config.fish
     fi
 }
 
@@ -184,12 +179,15 @@ if prompt "Setup fzf?"; then
     __setup_fzf=true
 fi
 
-if prompt "Setup neo-vim?"; then
-    echo "Will setup neo-vim"
-    __setup_nvim=true
+if prompt "Setup zoxide (enforces rust)?"; then
+    echo "Will setup zoxide"
+    __setup_rust=true
+    __setup_zoxide=true
 fi
 
 echo "Starting setup, get a cup of coffee"
+
+set -x
 
 if [[ -v "__setup_fish" ]]; then
     echo "${BLUE}Setting up ${SMUL}fish${NORMAL}"
@@ -226,9 +224,9 @@ else
     echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
 fi
 
-if [ -v "__setup_nvim" ]; then
-    echo "${BLUE}Setting up ${SMUL}nvim${NORMAL}"
-    setup_nvim
+if [ -v "__setup_zoxide" ]; then
+    echo "${BLUE}Setting up ${SMUL}zoxide${NORMAL}"
+    setup_fzf
 else
-    echo "${RED}Skipping ${SMUL}nvim${NORMAL}"
+    echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
 fi
