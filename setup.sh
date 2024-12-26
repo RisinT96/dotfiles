@@ -118,10 +118,10 @@ setup_rust() {
 
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-    source "$HOME/.cargo/env"
+    echo '. "$HOME/.cargo/env"' >> ~/.bashrc
 
     if [ -v "__setup_fish" ]; then
-        fish -c "fish_add_path $HOME/.cargo/bin"
+        echo 'source "$HOME/.cargo/env.fish"' >> ~/.config/fish/config.fish
     fi
 }
 
@@ -148,7 +148,7 @@ setup_zoxide() {
     echo 'eval "$(zoxide init bash)"' >> ~/.bashrc
 
     if [ -v "__setup_fish" ]; then
-        echo 'zoxide init fish | source' > ~/.config/fish/config.fish
+        echo 'zoxide init fish | source' >> ~/.config/fish/config.fish
     fi
 }
 
