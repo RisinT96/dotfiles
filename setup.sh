@@ -118,6 +118,7 @@ setup_rust() {
 
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
+    . "$HOME/.cargo/env"
     echo '. "$HOME/.cargo/env"' >> ~/.bashrc
 
     if [ -v "__setup_fish" ]; then
