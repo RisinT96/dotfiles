@@ -226,7 +226,7 @@ fi
 
 if [ -v "__setup_zoxide" ]; then
     echo "${BLUE}Setting up ${SMUL}zoxide${NORMAL}"
-    setup_fzf
+    setup_zoxide
 else
     echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
 fi
