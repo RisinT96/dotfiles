@@ -20,6 +20,55 @@ prompt() {
     done
 }
 
+prompt_parameter() {
+    local __parameter_name=$1
+    shift
+    local __dependencies="$@"
+
+    if [ -v "__setup_${__parameter_name}" ]; then
+        # Already defined
+        return
+    fi
+
+    if [ -n "${__dependencies}" ]; then
+        prompt "Setup ${__parameter_name} (depends on ${__dependencies})"
+    else
+        prompt "Setup ${__parameter_name}"
+    fi
+    local __result="$?"
+
+    if [ "$__result" -ne "0" ]; then
+        return
+    fi
+
+    echo "Will setup ${__parameter_name}"
+    eval "__setup_${__parameter_name}"=true
+
+    for dep in "${__dependencies[@]}"; do
+        if ! [ -n "${dep}" ]; then
+            continue
+        fi
+
+        echo "Will setup ${dep}"
+        eval "__setup_${dep}"=true
+    done
+}
+
+run_setup() {
+    local __parameter_name=$1
+
+    if ! [ -v "__setup_${__parameter_name}" ]; then
+        # Skip
+        echo "${RED}Skipping ${SMUL}${__parameter_name}${NORMAL}"
+        return
+    fi
+
+    echo "${BLUE}Setting up ${SMUL}${__parameter_name}${NORMAL}"
+
+    local __function_name="setup_${__parameter_name}"
+    $__function_name
+}
+
 setup_fish() {
     sudo apt-get update
     sudo apt-get install -y \
@@ -153,81 +202,20 @@ setup_zoxide() {
     fi
 }
 
-set -e
-
-if prompt "Setup fish?"; then
-    echo "Will setup fish"
-    __setup_fish=true
-fi
-
-if prompt "Setup tmux?"; then
-    echo "Will setup tmux"
-    __setup_tmux=true
-fi
-
-if prompt "Setup docker?"; then
-    echo "Will setup docker"
-    __setup_docker=true
-fi
-
-if prompt "Setup rust?"; then
-    echo "Will setup rust"
-    __setup_rust=true
-fi
-
-if prompt "Setup fzf?"; then
-    echo "Will setup fzf"
-    __setup_fzf=true
-fi
-
-if prompt "Setup zoxide (enforces rust)?"; then
-    echo "Will setup zoxide"
-    __setup_rust=true
-    __setup_zoxide=true
-fi
+prompt_parameter fish
+prompt_parameter tmux
+prompt_parameter docker
+prompt_parameter rust
+prompt_parameter fzf
+prompt_parameter "zoxide" "rust"
 
 echo "Starting setup, get a cup of coffee"
 
-set -x
+set -e
 
-if [[ -v "__setup_fish" ]]; then
-    echo "${BLUE}Setting up ${SMUL}fish${NORMAL}"
-    setup_fish
-else
-    echo "${RED}Skipping ${SMUL}fish${NORMAL}"
-fi
-
-if [ -v "__setup_tmux" ]; then
-    echo "${BLUE}Setting up ${SMUL}tmux${NORMAL}"
-    setup_tmux
-else
-    echo "${RED}Skipping ${SMUL}tmux${NORMAL}"
-fi
-
-if [ -v "__setup_docker" ]; then
-    echo "${BLUE}Setting up ${SMUL}docker${NORMAL}"
-    setup_docker
-else
-    echo "${RED}Skipping ${SMUL}docker${NORMAL}"
-fi
-
-if [ -v "__setup_rust" ]; then
-    echo "${BLUE}Setting up ${SMUL}rust${NORMAL}"
-    setup_rust
-else
-    echo "${RED}Skipping ${SMUL}rust${NORMAL}"
-fi
-
-if [ -v "__setup_fzf" ]; then
-    echo "${BLUE}Setting up ${SMUL}fzf${NORMAL}"
-    setup_fzf
-else
-    echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
-fi
-
-if [ -v "__setup_zoxide" ]; then
-    echo "${BLUE}Setting up ${SMUL}zoxide${NORMAL}"
-    setup_zoxide
-else
-    echo "${RED}Skipping ${SMUL}fzf${NORMAL}"
-fi
+run_setup fish
+run_setup tmux
+run_setup docker
+run_setup rust
+run_setup fzf
+run_setup zoxide
