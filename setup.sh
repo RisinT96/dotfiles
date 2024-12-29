@@ -194,13 +194,13 @@ setup_fzf() {
     git clone --depth 1 https://github.com/junegunn/fzf.git $HOME/.fzf
     $HOME/.fzf/install --no-fish --bin
 
-    if [ -v "__setup_fish" ]; then
+    if [ "$__setup_fish" == "true" ]; then
         fish -c "fish_add_path $HOME/.fzf/bin"
         fish -c "yes | fisher install PatrickF1/fzf.fish"
     fi
 
-    if [ -v "__setup_rust" ]; then
-        cargo install --locked \
+    if [ "$__setup_rust" == "true" ]; then
+        cargo install \
             bat \
             fd-find \
             ripgrep
@@ -208,7 +208,7 @@ setup_fzf() {
 }
 
 setup_zoxide() {
-    cargo install zoxide --locked
+    cargo install zoxide
 
     echo 'eval "$(zoxide init bash)"' >> ~/.bashrc
 }
