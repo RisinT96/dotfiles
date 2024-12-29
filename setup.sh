@@ -2,6 +2,7 @@
 
 NORMAL=$(tput sgr0)
 RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
 BLUE=$(tput setaf 4)
 SMUL=$(tput smul)
 RMUL=$(tput rmul)
@@ -41,7 +42,6 @@ prompt_parameter() {
         return
     fi
 
-    echo "Will setup ${__parameter_name}"
     eval "__setup_${__parameter_name}"=true
 
     for dep in "${__dependencies[@]}"; do
@@ -49,15 +49,15 @@ prompt_parameter() {
             continue
         fi
 
-        echo "Will setup ${dep}"
         eval "__setup_${dep}"=true
     done
 }
 
 run_setup() {
     local __parameter_name=$1
+    local __setup_name="__setup_${__parameter_name}"
 
-    if ! [ -v "__setup_${__parameter_name}" ]; then
+    if [ "${!__setup_name}" != "true" ]; then
         # Skip
         echo "${RED}Skipping ${SMUL}${__parameter_name}${NORMAL}"
         return
@@ -67,6 +67,25 @@ run_setup() {
 
     local __function_name="setup_${__parameter_name}"
     $__function_name
+}
+
+print_selected() {
+    local __parameter_name=$1
+    local __setup_name="__setup_${__parameter_name}"
+
+    if [ "${!__setup_name}" != "true" ]; then
+        echo -e "${__parameter_name}:\t${RED}NO${NORMAL}"
+        return
+    fi
+
+    echo -e "${__parameter_name}:\t${GREEN}YES${NORMAL}"
+}
+
+contains_element () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
 }
 
 setup_fish() {
@@ -169,10 +188,6 @@ setup_rust() {
 
     . "$HOME/.cargo/env"
     echo '. "$HOME/.cargo/env"' >> ~/.bashrc
-
-    if [ -v "__setup_fish" ]; then
-        echo 'source "$HOME/.cargo/env.fish"' >> ~/.config/fish/config.fish
-    fi
 }
 
 setup_fzf() {
@@ -196,26 +211,60 @@ setup_zoxide() {
     cargo install zoxide --locked
 
     echo 'eval "$(zoxide init bash)"' >> ~/.bashrc
-
-    if [ -v "__setup_fish" ]; then
-        echo 'zoxide init fish | source' >> ~/.config/fish/config.fish
-    fi
 }
 
-prompt_parameter fish
-prompt_parameter tmux
-prompt_parameter docker
-prompt_parameter rust
-prompt_parameter fzf
-prompt_parameter "zoxide" "rust"
+declare -a utilities; declare -A dependencies;
 
-echo "Starting setup, get a cup of coffee"
+utilities+=("fish");   dependencies["fish"]=""
+utilities+=("tmux");   dependencies["tmux"]=""
+utilities+=("docker"); dependencies["docker"]=""
+utilities+=("rust");   dependencies["rust"]=""
+utilities+=("fzf");    dependencies["fzf"]=""
+utilities+=("zoxide"); dependencies["zoxide"]="rust"
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    --no-*)
+      utility="${1#--no-}"
+
+      if contains_element "$utility" "${utilities[@]}"; then
+        eval "__setup_${utility}"=false
+      else
+        echo "Unknown utility: '$utility'"
+        exit 1
+      fi
+      shift
+      ;;
+    --*)
+      utility="${1#--}"
+
+      if contains_element "$utility" "${utilities[@]}"; then
+        eval "__setup_${utility}"=true
+      else
+        echo "Unknown utility: '$utility'"
+        exit 1
+      fi
+      shift
+      ;;
+    *)
+      echo "Unknown option: '$1'"
+      exit 1
+      ;;
+  esac
+done
+
+for utility in "${utilities[@]}"; do
+    prompt_parameter $utility "${dependencies[$utility]}"
+done
 
 set -e
 
-run_setup fish
-run_setup tmux
-run_setup docker
-run_setup rust
-run_setup fzf
-run_setup zoxide
+for utility in "${utilities[@]}"; do
+    print_selected $utility
+done
+
+echo "Starting setup, get a cup of coffee"
+
+for utility in "${utilities[@]}"; do
+    run_setup $utility
+done
