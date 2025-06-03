@@ -94,7 +94,7 @@ setup_fish() {
         curl \
         software-properties-common
 
-    yes | sudo apt-add-repository ppa:fish-shell/release-3
+    yes | sudo add-apt-repository ppa:fish-shell/release-4
     sudo apt-get update
     sudo apt-get install -y \
         fish
