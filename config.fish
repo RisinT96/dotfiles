@@ -1,6 +1,5 @@
 if status is-interactive
     if type -q fzf
-        # do stuff
         fzf_configure_bindings \
             --directory=\ct \
             --git_log=\eL \
@@ -8,18 +7,10 @@ if status is-interactive
             --history=\cr \
             --processes=\eP \
             --variables=\cv
-
-        function fzf --wraps=fzf --description="Use fzf-tmux if in tmux session"
-            if set --query TMUX
-                fzf-tmux $argv
-            else
-                command fzf $argv
-            end
-        end
     end
 
     if type -q zoxide
-        zoxide init fish | source
+        zoxide init fish --cmd cd | source
     end
 end
 
