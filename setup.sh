@@ -100,7 +100,12 @@ setup_fish() {
         fish
 
     mkdir -p $HOME/.config/fish/
-    ln -s -f $SCRIPTPATH/config.fish $HOME/.config/fish/config.fish
+    find "$SCRIPTPATH/config/fish" -type f -print0 | while IFS= read -rd '' file; do
+        rel_path="${file#$SCRIPTPATH/config/fish/}"
+        target_dir="$(dirname "$HOME/.config/fish/$rel_path")"
+        mkdir -p "$target_dir"
+        ln -s -f "$file" "$HOME/.config/fish/$rel_path"
+    done
 
     fish -c \
         "curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish \
