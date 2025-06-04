@@ -8,10 +8,6 @@ if status is-interactive
             --processes=\eP \
             --variables=\cv
     end
-
-    if type -q zoxide
-        zoxide init fish --cmd cd | source
-    end
 end
 
 if test -e "$HOME/.cargo/env.fish"
