@@ -1,10 +1,18 @@
 abbr --add -- ga 'git add'
+
 abbr --add -- gb 'git branch'
+
 abbr --add -- gc 'git checkout'
 abbr --add -- gcb 'git checkout -b'
+
 abbr --add -- gf 'git fetch'
+
 abbr --add -- gp 'git pull'
+
 abbr --add -- gps 'git push'
+
 abbr --add -- gr 'git rebase'
 abbr --add -- gri 'git rebase -i'
+abbr --add -- grc 'git rebase --continue'
+
 abbr --add -- gs 'git status'
