@@ -383,6 +383,16 @@ bind C-space send-prefix
 # move status line to top
 #set -g status-position top
 
+# keep activity highlighting without ringing on every new output
+setw -g monitor-activity on
+set -g activity-action none
+
+# treat an actual bell as a finished-job alert for inactive windows
+setw -g monitor-bell on
+set -g bell-action other
+set -g visual-bell off
+set -g window-status-bell-style "fg=#ffff00,bold"
+
 # Move windoes using ctrl shift left/right
 bind-key -n C-S-Left swap-window -t -1\; select-window -t -1
 bind-key -n C-S-Right swap-window -t +1\; select-window -t +1
